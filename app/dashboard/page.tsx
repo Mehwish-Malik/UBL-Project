@@ -13,19 +13,34 @@ import {
   spendingByCategory,
   monthlySpending,
 } from '@/data/mock-data';
+import { motion } from 'framer-motion';
+import { staggerContainer } from '@/lib/animations';
 
 export default function DashboardPage() {
   return (
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-slate-100">Dashboard</h1>
-          <p className="mt-2 text-slate-400">Your Financial World, Connected. AI-powered insights at your fingertips.</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+            Dashboard
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Your Financial World, Connected. AI-powered insights at your fingertips.
+          </p>
+        </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <motion.div
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
+        >
           <StatCard
             title="Total Balance"
             value={`PKR ${(dashboardStats.totalBalance / 1000).toFixed(0)}K`}
@@ -58,7 +73,7 @@ export default function DashboardPage() {
             icon={Award}
             iconColor="bg-gradient-to-br from-purple-600 to-purple-700"
           />
-        </div>
+        </motion.div>
 
         {/* Charts */}
         <div className="grid gap-6 lg:grid-cols-2">
@@ -80,51 +95,65 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Transactions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentTransactions.map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex items-center justify-between border-b border-slate-800 pb-4 last:border-0 last:pb-0"
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                        transaction.type === 'credit' ? 'bg-emerald-600/20' : 'bg-red-600/20'
-                      }`}
-                    >
-                      {transaction.type === 'credit' ? (
-                        <ArrowUpRight className="h-5 w-5 text-emerald-500" />
-                      ) : (
-                        <ArrowDownRight className="h-5 w-5 text-red-500" />
-                      )}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Transactions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentTransactions.map((transaction, index) => (
+                  <motion.div
+                    key={transaction.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
+                    className="flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0 hover:bg-muted/30 -mx-2 px-2 py-2 rounded-lg transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <motion.div
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                          transaction.type === 'credit'
+                            ? 'bg-emerald-600/20 dark:bg-emerald-600/20'
+                            : 'bg-red-600/20 dark:bg-red-600/20'
+                        }`}
+                      >
+                        {transaction.type === 'credit' ? (
+                          <ArrowUpRight className="h-5 w-5 text-emerald-600 dark:text-emerald-500" />
+                        ) : (
+                          <ArrowDownRight className="h-5 w-5 text-red-600 dark:text-red-500" />
+                        )}
+                      </motion.div>
+                      <div>
+                        <p className="font-medium">{transaction.description}</p>
+                        <p className="text-sm text-muted-foreground">{transaction.date}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-slate-100">{transaction.description}</p>
-                      <p className="text-sm text-slate-500">{transaction.date}</p>
+                    <div className="text-right">
+                      <p
+                        className={`font-semibold ${
+                          transaction.type === 'credit'
+                            ? 'text-emerald-600 dark:text-emerald-500'
+                            : 'text-foreground'
+                        }`}
+                      >
+                        {transaction.type === 'credit' ? '+' : ''}PKR {Math.abs(transaction.amount).toLocaleString()}
+                      </p>
+                      <Badge variant="outline" className="mt-1">
+                        {transaction.category}
+                      </Badge>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p
-                      className={`font-semibold ${
-                        transaction.type === 'credit' ? 'text-emerald-500' : 'text-slate-100'
-                      }`}
-                    >
-                      {transaction.type === 'credit' ? '+' : ''}PKR {Math.abs(transaction.amount).toLocaleString()}
-                    </p>
-                    <Badge variant="outline" className="mt-1">
-                      {transaction.category}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </MainLayout>
   );
