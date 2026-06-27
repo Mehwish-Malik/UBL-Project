@@ -50,3 +50,27 @@ export interface ChartData {
   value?: number;
   [key: string]: string | number | undefined;
 }
+
+// Fraud Detection Types
+export type ThreatLevel = 'SAFE' | 'SUSPICIOUS' | 'HIGH RISK';
+
+export interface FraudAnalysisRequest {
+  message: string;
+  type: 'sms' | 'whatsapp' | 'email' | 'query' | 'transfer';
+}
+
+export interface FraudAnalysisResult {
+  riskScore: number;
+  threatLevel: ThreatLevel;
+  reasons: string[];
+  recommendations: string[];
+  analysis: string;
+  detectedThreats: string[];
+  timestamp: string;
+}
+
+export interface FraudPattern {
+  pattern: string;
+  severity: 'high' | 'medium' | 'low';
+  description: string;
+}

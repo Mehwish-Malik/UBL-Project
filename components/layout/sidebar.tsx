@@ -8,6 +8,7 @@ import {
   ShieldAlert,
   Calculator,
   Heart,
+  Shield,
   ChevronLeft
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,11 @@ const navItems = [
     title: 'Voice Assistant',
     href: '/voice-assistant',
     icon: Mic,
+  },
+  {
+    title: 'Fraud Shield',
+    href: '/fraud-shield',
+    icon: Shield,
   },
   {
     title: 'Fraud Alerts',
