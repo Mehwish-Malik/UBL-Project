@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { ChartData } from '@/types';
 import { motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
+import { memo, useMemo } from 'react';
 
 interface BarChartCardProps {
   title: string;
@@ -13,9 +14,18 @@ interface BarChartCardProps {
   dataKeys: { key: string; color: string; name: string }[];
 }
 
-export function BarChartCard({ title, description, data, dataKeys }: BarChartCardProps) {
+export const BarChartCard = memo(function BarChartCard({ title, description, data, dataKeys }: BarChartCardProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+
+  const chartConfig = useMemo(() => ({
+    gridStroke: isDark ? '#334155' : '#e2e8f0',
+    axisStroke: isDark ? '#94a3b8' : '#64748b',
+    tooltipBg: isDark ? '#1e293b' : '#ffffff',
+    tooltipBorder: isDark ? '#334155' : '#e2e8f0',
+    tooltipColor: isDark ? '#f1f5f9' : '#0f172a',
+    cursorFill: isDark ? 'rgba(51, 65, 85, 0.3)' : 'rgba(226, 232, 240, 0.3)',
+  }), [isDark]);
 
   return (
     <motion.div
@@ -33,30 +43,30 @@ export function BarChartCard({ title, description, data, dataKeys }: BarChartCar
             <BarChart data={data}>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke={isDark ? '#334155' : '#e2e8f0'}
+                stroke={chartConfig.gridStroke}
                 vertical={false}
               />
               <XAxis
                 dataKey="name"
-                stroke={isDark ? '#94a3b8' : '#64748b'}
+                stroke={chartConfig.axisStroke}
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                stroke={isDark ? '#94a3b8' : '#64748b'}
+                stroke={chartConfig.axisStroke}
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: isDark ? '#1e293b' : '#ffffff',
-                  border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+                  backgroundColor: chartConfig.tooltipBg,
+                  border: `1px solid ${chartConfig.tooltipBorder}`,
                   borderRadius: '8px',
-                  color: isDark ? '#f1f5f9' : '#0f172a',
+                  color: chartConfig.tooltipColor,
                 }}
-                cursor={{ fill: isDark ? 'rgba(51, 65, 85, 0.3)' : 'rgba(226, 232, 240, 0.3)' }}
+                cursor={{ fill: chartConfig.cursorFill }}
               />
               <Legend />
               {dataKeys.map((item) => (
@@ -76,4 +86,4 @@ export function BarChartCard({ title, description, data, dataKeys }: BarChartCar
       </Card>
     </motion.div>
   );
-}
+});

@@ -39,32 +39,36 @@ export function VoiceAgent({ className }: VoiceAgentProps) {
     setProcessing,
     clearTranscript,
     isProcessingRef,
+    lastProcessedTranscriptRef,
+    processingLockRef,
   } = useVoice();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const processedTranscriptsRef = useRef(new Set<string>());
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Handle transcript completion - only when we have a final transcript
+  // Handle transcript completion - SINGLE CYCLE ONLY
   useEffect(() => {
     // Only process if:
-    // 1. We have a transcript
-    // 2. State is idle (recognition has ended)
-    // 3. Not already processing
-    // 4. Haven't processed this exact transcript yet
+    // 1. We have a non-empty transcript
+    // 2. State is idle (recognition has completely ended)
+    // 3. Not currently processing (lock check)
+    // 4. Haven't processed this exact transcript before
     if (
       transcript &&
       transcript.trim() &&
       state === 'idle' &&
-      !isProcessingRef.current &&
-      !processedTranscriptsRef.current.has(transcript)
+      !processingLockRef.current &&
+      lastProcessedTranscriptRef.current !== transcript
     ) {
-      // Mark as processed immediately to prevent re-triggers
-      processedTranscriptsRef.current.add(transcript);
+      // Acquire lock IMMEDIATELY to prevent duplicate processing
+      processingLockRef.current = true;
+
+      // Mark this transcript as processed
+      lastProcessedTranscriptRef.current = transcript;
 
       // Process the transcript
       handleTranscriptComplete(transcript);
@@ -72,21 +76,21 @@ export function VoiceAgent({ className }: VoiceAgentProps) {
       // Clear the transcript from state to prevent future re-triggers
       clearTranscript();
     }
-  }, [transcript, state, isProcessingRef, clearTranscript]);
+  }, [transcript, state, processingLockRef, lastProcessedTranscriptRef, clearTranscript]);
 
   const handleTranscriptComplete = async (text: string) => {
-    if (!text.trim() || isProcessingRef.current) return;
-
-    // Set processing flag FIRST
-    isProcessingRef.current = true;
-
-    // Add user message
-    addMessage('user', text);
-
-    // Set processing state
-    setProcessing();
+    if (!text.trim()) {
+      processingLockRef.current = false;
+      return;
+    }
 
     try {
+      // Add user message
+      addMessage('user', text);
+
+      // Set processing state
+      setProcessing();
+
       // Call API
       const response = await fetch('/api/voice-assistant', {
         method: 'POST',
@@ -103,17 +107,24 @@ export function VoiceAgent({ className }: VoiceAgentProps) {
       // Add assistant message
       addMessage('assistant', data.response);
 
-      // Speak the response
+      // CRITICAL FIX: Reset isProcessingRef BEFORE speaking
+      // This allows the next voice input to work after speaking completes
+      isProcessingRef.current = false;
+
+      // Speak the response - this will change state to 'speaking'
       speak(data.response);
     } catch (err) {
       console.error('Error processing query:', err);
       const errorMessage = 'I apologize, I encountered an error. Please try again.';
       addMessage('assistant', errorMessage);
+
+      // CRITICAL FIX: Reset isProcessingRef even on error
+      isProcessingRef.current = false;
+
       speak(errorMessage);
     } finally {
-      // Clear processing flag after speech starts
-      // The speak function will handle state transitions
-      isProcessingRef.current = false;
+      // Release processing lock
+      processingLockRef.current = false;
     }
   };
 
@@ -123,15 +134,11 @@ export function VoiceAgent({ className }: VoiceAgentProps) {
     } else if (state === 'speaking') {
       stopSpeaking();
     } else if (state === 'idle') {
-      // Clear processed transcripts set when starting fresh
-      processedTranscriptsRef.current.clear();
       startListening();
     }
   };
 
   const handleClearChat = () => {
-    // Clear processed transcripts set when clearing chat
-    processedTranscriptsRef.current.clear();
     clearChat();
   };
 
@@ -382,6 +389,17 @@ export function VoiceAgent({ className }: VoiceAgentProps) {
                 state === 'idle' && 'bg-gradient-to-br from-slate-600 to-slate-700 hover:from-blue-600 hover:to-blue-700',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
+              aria-label={
+                state === 'listening'
+                  ? 'Stop listening'
+                  : state === 'speaking'
+                  ? 'Stop speaking'
+                  : state === 'processing'
+                  ? 'Processing your request'
+                  : 'Start voice assistant'
+              }
+              aria-live="polite"
+              aria-atomic="true"
             >
               {getMicIcon()}
             </motion.button>

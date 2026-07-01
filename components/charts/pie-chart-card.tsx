@@ -5,6 +5,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { ChartData } from '@/types';
 import { motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
+import { memo, useMemo, useCallback } from 'react';
 
 interface PieChartCardProps {
   title: string;
@@ -13,9 +14,21 @@ interface PieChartCardProps {
   colors: string[];
 }
 
-export function PieChartCard({ title, description, data, colors }: PieChartCardProps) {
+export const PieChartCard = memo(function PieChartCard({ title, description, data, colors }: PieChartCardProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+
+  const tooltipConfig = useMemo(() => ({
+    backgroundColor: isDark ? '#1e293b' : '#ffffff',
+    border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+    borderRadius: '8px',
+    color: isDark ? '#f1f5f9' : '#0f172a',
+  }), [isDark]);
+
+  const renderLabel = useCallback((props: { name?: string; percent?: number }) => {
+    const { name, percent } = props;
+    return `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`;
+  }, []);
 
   return (
     <motion.div
@@ -36,7 +49,7 @@ export function PieChartCard({ title, description, data, colors }: PieChartCardP
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                label={renderLabel}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
@@ -47,14 +60,7 @@ export function PieChartCard({ title, description, data, colors }: PieChartCardP
                   <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                 ))}
               </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: isDark ? '#1e293b' : '#ffffff',
-                  border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-                  borderRadius: '8px',
-                  color: isDark ? '#f1f5f9' : '#0f172a',
-                }}
-              />
+              <Tooltip contentStyle={tooltipConfig} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
@@ -62,4 +68,4 @@ export function PieChartCard({ title, description, data, colors }: PieChartCardP
       </Card>
     </motion.div>
   );
-}
+});

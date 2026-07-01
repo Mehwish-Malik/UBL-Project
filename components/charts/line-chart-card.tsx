@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { ChartData } from '@/types';
 import { motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
+import { memo, useMemo } from 'react';
 
 interface LineChartCardProps {
   title: string;
@@ -13,9 +14,18 @@ interface LineChartCardProps {
   dataKeys: { key: string; color: string; name: string }[];
 }
 
-export function LineChartCard({ title, description, data, dataKeys }: LineChartCardProps) {
+export const LineChartCard = memo(function LineChartCard({ title, description, data, dataKeys }: LineChartCardProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+
+  const chartConfig = useMemo(() => ({
+    gridStroke: isDark ? '#334155' : '#e2e8f0',
+    axisStroke: isDark ? '#94a3b8' : '#64748b',
+    tooltipBg: isDark ? '#1e293b' : '#ffffff',
+    tooltipBorder: isDark ? '#334155' : '#e2e8f0',
+    tooltipColor: isDark ? '#f1f5f9' : '#0f172a',
+    cursorStroke: isDark ? '#475569' : '#cbd5e1',
+  }), [isDark]);
 
   return (
     <motion.div
@@ -33,30 +43,30 @@ export function LineChartCard({ title, description, data, dataKeys }: LineChartC
             <LineChart data={data}>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke={isDark ? '#334155' : '#e2e8f0'}
+                stroke={chartConfig.gridStroke}
                 vertical={false}
               />
               <XAxis
                 dataKey="name"
-                stroke={isDark ? '#94a3b8' : '#64748b'}
+                stroke={chartConfig.axisStroke}
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                stroke={isDark ? '#94a3b8' : '#64748b'}
+                stroke={chartConfig.axisStroke}
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: isDark ? '#1e293b' : '#ffffff',
-                  border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+                  backgroundColor: chartConfig.tooltipBg,
+                  border: `1px solid ${chartConfig.tooltipBorder}`,
                   borderRadius: '8px',
-                  color: isDark ? '#f1f5f9' : '#0f172a',
+                  color: chartConfig.tooltipColor,
                 }}
-                cursor={{ stroke: isDark ? '#475569' : '#cbd5e1', strokeWidth: 1 }}
+                cursor={{ stroke: chartConfig.cursorStroke, strokeWidth: 1 }}
               />
               <Legend />
               {dataKeys.map((item) => (
@@ -79,4 +89,4 @@ export function LineChartCard({ title, description, data, dataKeys }: LineChartC
       </Card>
     </motion.div>
   );
-}
+});

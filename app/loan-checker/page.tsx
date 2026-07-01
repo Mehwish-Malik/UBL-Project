@@ -32,44 +32,44 @@ export default function LoanCheckerPage() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
             Loan Eligibility Intelligence
           </h1>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-muted-foreground">
             AI-powered loan analysis for personal and business financing
           </p>
         </motion.div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-3">
           {/* Loan Calculator Form */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               <Card>
-                <CardHeader>
-                  <CardTitle>Calculate Your Eligibility</CardTitle>
-                  <CardDescription>Enter your financial details to check loan eligibility</CardDescription>
+                <CardHeader className="px-4 sm:px-6">
+                  <CardTitle className="text-lg sm:text-xl">Calculate Your Eligibility</CardTitle>
+                  <CardDescription className="text-sm">Enter your financial details to check loan eligibility</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid gap-6 sm:grid-cols-2">
+                <CardContent className="px-4 sm:px-6">
+                  <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                    <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2">
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
                         className="space-y-2"
                       >
-                        <label className="text-sm font-medium">
+                        <label className="text-xs sm:text-sm font-medium">
                           Monthly Income (PKR)
                         </label>
                         <Input
@@ -87,7 +87,7 @@ export default function LoanCheckerPage() {
                         transition={{ delay: 0.3 }}
                         className="space-y-2"
                       >
-                        <label className="text-sm font-medium">
+                        <label className="text-xs sm:text-sm font-medium">
                           Existing Loans (PKR)
                         </label>
                         <Input
@@ -105,7 +105,7 @@ export default function LoanCheckerPage() {
                         transition={{ delay: 0.4 }}
                         className="space-y-2"
                       >
-                        <label className="text-sm font-medium">
+                        <label className="text-xs sm:text-sm font-medium">
                           Desired Loan Amount (PKR)
                         </label>
                         <Input
@@ -123,7 +123,7 @@ export default function LoanCheckerPage() {
                         transition={{ delay: 0.5 }}
                         className="space-y-2"
                       >
-                        <label className="text-sm font-medium">
+                        <label className="text-xs sm:text-sm font-medium">
                           Loan Tenure (Months)
                         </label>
                         <Input

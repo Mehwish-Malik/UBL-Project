@@ -2,8 +2,9 @@
 
 import { LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { memo } from 'react';
 
 interface StatCardProps {
   title: string;
@@ -14,7 +15,7 @@ interface StatCardProps {
   iconColor?: string;
 }
 
-export function StatCard({
+export const StatCard = memo(function StatCard({
   title,
   value,
   change,
@@ -22,15 +23,6 @@ export function StatCard({
   icon: Icon,
   iconColor = 'bg-emerald-600',
 }: StatCardProps) {
-  const y = useMotionValue(0);
-  const boxShadow = useTransform(
-    y,
-    [-10, 0],
-    [
-      '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
-      '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
-    ]
-  );
 
   return (
     <motion.div
@@ -38,28 +30,28 @@ export function StatCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1.0] }}
       whileHover={{ y: -4 }}
-      style={{ y, boxShadow }}
+      className="h-full"
     >
-      <Card className="overflow-hidden relative group cursor-pointer">
+      <Card className="overflow-hidden relative group cursor-pointer h-full">
         {/* Gradient overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        <CardContent className="p-6 relative">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2 flex-1">
-              <p className="text-sm font-medium text-muted-foreground">{title}</p>
+        <CardContent className="p-4 sm:p-6 relative h-full">
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-1.5 sm:space-y-2 flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
               <motion.h3
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.5, type: 'spring', stiffness: 200 }}
-                className="text-3xl font-bold"
+                className="text-2xl sm:text-3xl font-bold truncate"
               >
                 {value}
               </motion.h3>
               {change && (
                 <p
                   className={cn(
-                    'text-xs font-medium flex items-center gap-1',
+                    'text-xs font-medium flex items-center gap-1 truncate',
                     changeType === 'positive' && 'text-emerald-600 dark:text-emerald-500',
                     changeType === 'negative' && 'text-red-600 dark:text-red-500',
                     changeType === 'neutral' && 'text-muted-foreground'
@@ -75,23 +67,11 @@ export function StatCard({
               animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.3, duration: 0.5, type: 'spring', stiffness: 200 }}
               className={cn(
-                'flex h-14 w-14 items-center justify-center rounded-xl shadow-lg relative overflow-hidden',
+                'flex h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0 items-center justify-center rounded-xl shadow-lg',
                 iconColor
               )}
             >
-              <motion.div
-                className="absolute inset-0 bg-white/20"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.5, 0.8, 0.5],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-              />
-              <Icon className="h-7 w-7 text-white relative z-10" />
+              <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-white relative z-10" />
             </motion.div>
           </div>
 
@@ -107,4 +87,4 @@ export function StatCard({
       </Card>
     </motion.div>
   );
-}
+});

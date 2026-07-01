@@ -58,6 +58,8 @@ const DEMO_SCENARIOS = [
 
 const getThreatColor = (level: ThreatLevel) => {
   switch (level) {
+    case 'CRITICAL':
+      return 'text-red-600 dark:text-red-400';
     case 'HIGH RISK':
       return 'text-red-600 dark:text-red-500';
     case 'SUSPICIOUS':
@@ -69,6 +71,8 @@ const getThreatColor = (level: ThreatLevel) => {
 
 const getThreatBadgeVariant = (level: ThreatLevel) => {
   switch (level) {
+    case 'CRITICAL':
+      return 'destructive';
     case 'HIGH RISK':
       return 'destructive';
     case 'SUSPICIOUS':
@@ -80,6 +84,8 @@ const getThreatBadgeVariant = (level: ThreatLevel) => {
 
 const getThreatIcon = (level: ThreatLevel) => {
   switch (level) {
+    case 'CRITICAL':
+      return <AlertTriangle className="h-6 w-6" />;
     case 'HIGH RISK':
       return <AlertTriangle className="h-6 w-6" />;
     case 'SUSPICIOUS':
@@ -143,21 +149,22 @@ export default function FraudShieldPage() {
   };
 
   const getRiskScoreColor = (score: number) => {
-    if (score >= 71) return 'from-red-600 to-red-700';
-    if (score >= 31) return 'from-amber-600 to-amber-700';
+    if (score >= 90) return 'from-red-700 to-red-800';
+    if (score >= 70) return 'from-red-600 to-red-700';
+    if (score >= 35) return 'from-amber-600 to-amber-700';
     return 'from-emerald-600 to-emerald-700';
   };
 
   return (
     <MainLayout>
-      <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-3 sm:gap-4">
             <motion.div
               animate={{
                 boxShadow: [
@@ -167,24 +174,24 @@ export default function FraudShieldPage() {
                 ],
               }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white"
+              className="flex h-12 w-12 sm:h-16 sm:w-16 flex-shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white"
             >
-              <Shield className="h-8 w-8" />
+              <Shield className="h-6 w-6 sm:h-8 sm:w-8" />
             </motion.div>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent">
                 Fraud Shield Agent
               </h1>
-              <p className="mt-2 text-muted-foreground">
+              <p className="mt-1 sm:mt-2 text-sm sm:text-base text-muted-foreground">
                 AI-powered fraud detection protecting you from scams, phishing, and social engineering attacks
               </p>
             </div>
           </div>
         </motion.div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-3">
           {/* Main Analysis Panel */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Input Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -192,17 +199,17 @@ export default function FraudShieldPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               <Card>
-                <CardHeader>
-                  <CardTitle>Analyze Message</CardTitle>
-                  <CardDescription>
+                <CardHeader className="px-4 sm:px-6">
+                  <CardTitle className="text-lg sm:text-xl">Analyze Message</CardTitle>
+                  <CardDescription className="text-sm">
                     Paste any suspicious message, SMS, email, or query to check for fraud
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 px-4 sm:px-6">
                   {/* Message Type Selector */}
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Message Type</label>
-                    <div className="flex flex-wrap gap-2">
+                    <label className="text-xs sm:text-sm font-medium mb-2 block">Message Type</label>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {MESSAGE_TYPES.map((type) => (
                         <Button
                           key={type.value}
@@ -220,7 +227,7 @@ export default function FraudShieldPage() {
 
                   {/* Message Input */}
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Message Content</label>
+                    <label className="text-xs sm:text-sm font-medium mb-2 block">Message Content</label>
                     <Textarea
                       placeholder="Paste the message you want to analyze here..."
                       value={message}
@@ -275,6 +282,7 @@ export default function FraudShieldPage() {
                   transition={{ duration: 0.5 }}
                 >
                   <Card className={`border-2 ${
+                    result.threatLevel === 'CRITICAL' ? 'border-red-900/70 bg-red-950/20' :
                     result.threatLevel === 'HIGH RISK' ? 'border-red-900/50 bg-red-950/10' :
                     result.threatLevel === 'SUSPICIOUS' ? 'border-amber-900/50 bg-amber-950/10' :
                     'border-emerald-900/50 bg-emerald-950/10'

@@ -86,10 +86,11 @@ function calculateRiskScore(message: string): { score: number; detectedPatterns:
   };
 }
 
-// Determine threat level based on risk score
+// Determine threat level based on risk score with 4 distinct levels
 function determineThreatLevel(score: number): ThreatLevel {
-  if (score >= 71) return 'HIGH RISK';
-  if (score >= 31) return 'SUSPICIOUS';
+  if (score >= 90) return 'CRITICAL';
+  if (score >= 70) return 'HIGH RISK';
+  if (score >= 35) return 'SUSPICIOUS';
   return 'SAFE';
 }
 
@@ -97,33 +98,47 @@ function determineThreatLevel(score: number): ThreatLevel {
 function generateRecommendations(threatLevel: ThreatLevel, detectedPatterns: string[]): string[] {
   const recommendations: string[] = [];
 
-  if (threatLevel === 'HIGH RISK') {
-    recommendations.push('🚫 Do NOT respond to this message');
-    recommendations.push('🚫 Do NOT share any personal information, OTP, PIN, or passwords');
-    recommendations.push('📞 Contact UBL official helpline: 111-825-888');
-    recommendations.push('🗑️ Delete this message immediately');
-    recommendations.push('🚨 Report this message to UBL Fraud Department');
-    recommendations.push('🔒 Block the sender');
+  if (threatLevel === 'CRITICAL') {
+    recommendations.push('🚨 CRITICAL THREAT - Do NOT engage with this message under any circumstances');
+    recommendations.push('🚫 IMMEDIATELY cease all communication with the sender');
+    recommendations.push('🔒 Do NOT share any OTP, PIN, password, card details, or personal information');
+    recommendations.push('📞 Contact UBL Fraud Hotline immediately: 111-825-888');
+    recommendations.push('🗑️ Delete this message and block the sender permanently');
+    recommendations.push('📋 Report this incident to UBL Fraud Department and file a complaint');
+    recommendations.push('⚠️ Alert family members about this scam pattern');
+  } else if (threatLevel === 'HIGH RISK') {
+    recommendations.push('🚫 Do NOT respond to this message or follow any instructions');
+    recommendations.push('🔐 Never share OTP, PIN, CVV, passwords, or account credentials');
+    recommendations.push('📞 Verify sender authenticity by calling UBL official helpline: 111-825-888');
+    recommendations.push('🗑️ Delete this message immediately to prevent accidental interaction');
+    recommendations.push('🚨 Report this suspected fraud attempt to UBL Fraud Department');
+    recommendations.push('🔒 Block the sender and mark as spam');
   } else if (threatLevel === 'SUSPICIOUS') {
-    recommendations.push('⚠️ Proceed with extreme caution');
-    recommendations.push('✅ Verify the sender through official UBL channels');
-    recommendations.push('📞 Call UBL helpline to confirm: 111-825-888');
-    recommendations.push('🔍 Check the message for spelling errors or suspicious links');
-    recommendations.push('❌ Do not click any links without verification');
+    recommendations.push('⚠️ Exercise extreme caution - this message shows suspicious characteristics');
+    recommendations.push('✅ Independently verify sender identity through official UBL channels only');
+    recommendations.push('📞 Call UBL helpline directly at 111-825-888 - do not use contact info from the message');
+    recommendations.push('🔍 Carefully examine the message for spelling errors, unusual requests, or suspicious links');
+    recommendations.push('❌ Do not click any links or download attachments without verification');
+    recommendations.push('⏰ Take your time - legitimate banks never pressure for immediate action');
   } else {
-    recommendations.push('✅ This appears to be a legitimate query');
-    recommendations.push('💡 Always verify important requests through official channels');
-    recommendations.push('🔒 Never share OTP, PIN, or passwords with anyone');
-    recommendations.push('📱 Enable two-factor authentication for added security');
+    recommendations.push('✅ This message appears to be a legitimate banking inquiry');
+    recommendations.push('🔒 For your security, always use official UBL channels (app, website, helpline)');
+    recommendations.push('💡 Remember: Banks NEVER ask for OTP, PIN, CVV, or full card details');
+    recommendations.push('📱 Enable transaction alerts and two-factor authentication');
+    recommendations.push('🛡️ Stay vigilant - verify any unusual requests through official channels');
   }
 
-  // Pattern-specific recommendations
+  // Pattern-specific critical warnings
   if (detectedPatterns.some(p => p.includes('OTP') || p.includes('PERSONAL INFO'))) {
-    recommendations.push('⚠️ CRITICAL: Banks NEVER ask for OTPs, PINs, or passwords');
+    recommendations.push('⛔ CRITICAL WARNING: UBL will NEVER ask for OTP, PIN, password, or CVV through SMS, email, WhatsApp, or phone calls');
   }
 
   if (detectedPatterns.some(p => p.includes('SUSPICIOUS LINKS'))) {
-    recommendations.push('🔗 Never click on suspicious links or download attachments');
+    recommendations.push('🔗 SECURITY ALERT: Do not click links in unsolicited messages - they may install malware or steal credentials');
+  }
+
+  if (detectedPatterns.some(p => p.includes('MONEY REQUEST') || p.includes('ACCOUNT THREAT'))) {
+    recommendations.push('💰 FRAUD INDICATOR: Legitimate banks do not threaten account closure or request processing fees via messages');
   }
 
   return recommendations;
@@ -143,44 +158,85 @@ export async function analyzeFraudMessage(request: FraudAnalysisRequest): Promis
     const openai = getOpenAIClient();
     if (openai) {
       try {
-        // Create AI prompt for detailed analysis
-        const systemPrompt = `You are a banking fraud detection expert for UBL Bank in Pakistan. Analyze messages for fraud, phishing, scams, OTP fraud, and social engineering attacks.
+        // Create comprehensive AI prompt for detailed fraud analysis
+        const systemPrompt = `You are an elite fraud detection AI analyst for United Bank Limited (UBL), Pakistan's premier financial institution. Your expertise covers banking fraud, phishing, social engineering, OTP fraud, impersonation scams, and financial cyber threats.
 
-Key fraud indicators:
-- OTP/PIN/Password requests (Banks NEVER ask for these)
-- Urgent threatening language
-- Suspicious links or attachments
-- Impersonation of bank officials
-- Prize/lottery scams
-- Account blocking threats
-- Personal information requests
-- Unusual money transfer requests
+CRITICAL FRAUD INDICATORS TO ANALYZE:
 
-Respond with a detailed analysis focusing on:
-1. Why this is or isn't a fraud attempt
-2. Specific red flags detected
-3. User safety considerations
+1. CREDENTIAL THEFT ATTEMPTS
+   - Requests for OTP, PIN, CVV, passwords, or security codes
+   - Remember: BANKS NEVER REQUEST THESE THROUGH ANY CHANNEL
 
-Be concise but thorough. Use Pakistani banking context.`;
+2. IMPERSONATION & SOCIAL ENGINEERING
+   - Claims to be bank officials, fraud departments, or customer service
+   - Use of official-sounding but unverifiable titles
+   - Pressure tactics and false authority
 
-        const userPrompt = `Analyze this ${type} message for fraud:
+3. URGENCY & THREAT TACTICS
+   - Account suspension/blocking threats
+   - "Immediate action required" language
+   - Artificial time constraints
+   - Penalty or loss warnings
 
-Message: "${message}"
+4. SUSPICIOUS TECHNICAL ELEMENTS
+   - Shortened URLs (bit.ly, tinyurl, etc.)
+   - Misspelled domain names or lookalike URLs
+   - Links requesting to "verify", "confirm", or "update" account
+   - Generic greetings instead of personalized communication
 
-Detected patterns: ${detectedPatterns.length > 0 ? detectedPatterns.join(', ') : 'None'}
-Initial risk score: ${patternScore}/100
+5. FINANCIAL SCAMS
+   - Prize/lottery winnings you didn't enter
+   - Processing fees or tax payments required
+   - Money mule recruitment
+   - Investment schemes with guaranteed returns
 
-Provide detailed fraud analysis.`;
+6. DATA HARVESTING
+   - Requests for CNIC, date of birth, mother's name
+   - Account or card number requests
+   - Personal or family information queries
 
-        // Call OpenAI API
+ANALYSIS REQUIREMENTS:
+- Provide a professional, comprehensive threat assessment
+- Identify specific fraud techniques employed
+- Explain the attacker's likely objective and methodology
+- Reference Pakistani banking regulations and customer protection guidelines where relevant
+- Use clear, authoritative language appropriate for financial security communications
+
+RESPONSE FORMAT:
+1. Threat Assessment: Overall risk evaluation
+2. Red Flags Identified: Specific suspicious elements
+3. Attack Vector Analysis: How the scam operates
+4. Customer Impact: Potential consequences if the user complies
+5. Verification Steps: How to confirm legitimacy through official channels
+
+Maintain professional tone. Focus on actionable intelligence. Be definitive when indicators are clear.`;
+
+        const userPrompt = `FRAUD ANALYSIS REQUEST
+
+Message Type: ${type.toUpperCase()}
+Communication Channel: ${type === 'sms' ? 'SMS Text Message' : type === 'whatsapp' ? 'WhatsApp' : type === 'email' ? 'Email' : type === 'query' ? 'General Banking Query' : 'Transfer Request'}
+
+MESSAGE CONTENT:
+"${message}"
+
+PATTERN DETECTION RESULTS:
+${detectedPatterns.length > 0 ? `Detected Fraud Patterns: ${detectedPatterns.join(', ')}` : 'No automatic pattern matches'}
+Computed Risk Score: ${patternScore}/100
+Preliminary Threat Level: ${determineThreatLevel(patternScore)}
+
+ANALYSIS REQUIRED:
+Conduct a thorough fraud risk assessment of this message. Evaluate all fraud indicators, explain the threat mechanism if present, and provide professional security guidance. Consider the Pakistani banking context and UBL's customer protection protocols.`;
+
+        // Call OpenAI API with enhanced configuration
         const completion = await openai.chat.completions.create({
           model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
           ],
-          temperature: 0.3,
-          max_tokens: 800,
+          temperature: 0.2, // Lower temperature for more consistent, factual analysis
+          max_tokens: 1000,
+          top_p: 0.9,
         });
 
         aiAnalysis = completion.choices[0].message.content || 'Unable to analyze message';

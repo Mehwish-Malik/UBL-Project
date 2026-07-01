@@ -27,6 +27,8 @@ export function useVoice(options: UseVoiceOptions = {}) {
   const isListeningRef = useRef(false);
   const isSpeakingRef = useRef(false);
   const isProcessingRef = useRef(false);
+  const lastProcessedTranscriptRef = useRef<string>('');
+  const processingLockRef = useRef(false);
 
   // Check browser support - only once on mount
   useEffect(() => {
@@ -71,7 +73,7 @@ export function useVoice(options: UseVoiceOptions = {}) {
     options.onStateChange?.(state);
   }, [state, options.onStateChange]);
 
-  // Setup recognition event handlers
+  // Setup recognition event handlers - only once
   useEffect(() => {
     const recognition = recognitionRef.current;
     if (!recognition) return;
@@ -114,6 +116,8 @@ export function useVoice(options: UseVoiceOptions = {}) {
           break;
         case 'aborted':
           // Silent - user intentionally stopped
+          isListeningRef.current = false;
+          setState('idle');
           return;
         default:
           errorMessage = `Speech recognition error: ${event.error}`;
@@ -127,13 +131,11 @@ export function useVoice(options: UseVoiceOptions = {}) {
     };
 
     const handleEnd = () => {
-      // Only transition to idle if we were actually listening
-      // and not already processing
-      if (isListeningRef.current && !isProcessingRef.current) {
-        isListeningRef.current = false;
+      isListeningRef.current = false;
+
+      // Only transition to idle if not processing or speaking
+      if (!isProcessingRef.current && !isSpeakingRef.current) {
         setState('idle');
-      } else if (isListeningRef.current) {
-        isListeningRef.current = false;
       }
     };
 
@@ -152,7 +154,7 @@ export function useVoice(options: UseVoiceOptions = {}) {
         recognition.onend = null;
       }
     };
-  }, [options.onTranscript, options.onError]);
+  }, []); // Empty deps - set up once
 
   // Start listening
   const startListening = useCallback(() => {
@@ -162,19 +164,22 @@ export function useVoice(options: UseVoiceOptions = {}) {
     }
 
     try {
-      // Clear previous transcript
+      // Clear previous transcript and last processed
       setTranscript('');
+      lastProcessedTranscriptRef.current = '';
       setError(null);
 
       recognitionRef.current.start();
     } catch (err: any) {
       // Handle "already started" error gracefully
       if (err.message && err.message.includes('already started')) {
-        console.warn('Recognition already started, stopping and restarting...');
+        console.warn('Recognition already started, aborting and restarting...');
         try {
-          recognitionRef.current.stop();
+          recognitionRef.current.abort();
           setTimeout(() => {
             try {
+              setTranscript('');
+              lastProcessedTranscriptRef.current = '';
               recognitionRef.current?.start();
             } catch (e) {
               console.error('Failed to restart recognition:', e);
@@ -202,21 +207,28 @@ export function useVoice(options: UseVoiceOptions = {}) {
     }
   }, []);
 
-  // Speak text
+  // Speak text - with proper cleanup and locks
   const speak = useCallback((text: string) => {
     if (!window.speechSynthesis || !text.trim()) {
       setError('Text-to-speech is not supported');
       return;
     }
 
-    // Cancel any ongoing speech first
+    // Cancel any ongoing speech IMMEDIATELY
     if (isSpeakingRef.current || window.speechSynthesis.speaking) {
       window.speechSynthesis.cancel();
       isSpeakingRef.current = false;
+      utteranceRef.current = null;
     }
 
-    // Small delay to ensure cancel completes
-    setTimeout(() => {
+    // Wait for cancel to complete before starting new speech
+    const startSpeech = () => {
+      // Double-check nothing is speaking
+      if (window.speechSynthesis.speaking) {
+        setTimeout(startSpeech, 50);
+        return;
+      }
+
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
       utterance.rate = 0.9;
@@ -232,7 +244,7 @@ export function useVoice(options: UseVoiceOptions = {}) {
         isSpeakingRef.current = false;
         utteranceRef.current = null;
 
-        // Only return to idle if not processing
+        // Only return to idle if not processing or listening
         if (!isProcessingRef.current && !isListeningRef.current) {
           setState('idle');
         }
@@ -256,7 +268,10 @@ export function useVoice(options: UseVoiceOptions = {}) {
 
       utteranceRef.current = utterance;
       window.speechSynthesis.speak(utterance);
-    }, 50);
+    };
+
+    // Start after a brief delay to ensure cancel completes
+    setTimeout(startSpeech, 100);
   }, []);
 
   // Stop speaking
@@ -289,6 +304,8 @@ export function useVoice(options: UseVoiceOptions = {}) {
     setMessages([]);
     setTranscript('');
     setError(null);
+    lastProcessedTranscriptRef.current = '';
+    processingLockRef.current = false;
 
     // Stop any ongoing operations
     stopSpeaking();
@@ -329,5 +346,7 @@ export function useVoice(options: UseVoiceOptions = {}) {
     isListeningRef,
     isSpeakingRef,
     isProcessingRef,
+    lastProcessedTranscriptRef,
+    processingLockRef,
   };
 }

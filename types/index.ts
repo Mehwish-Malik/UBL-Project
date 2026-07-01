@@ -52,7 +52,7 @@ export interface ChartData {
 }
 
 // Fraud Detection Types
-export type ThreatLevel = 'SAFE' | 'SUSPICIOUS' | 'HIGH RISK';
+export type ThreatLevel = 'SAFE' | 'SUSPICIOUS' | 'HIGH RISK' | 'CRITICAL';
 
 export interface FraudAnalysisRequest {
   message: string;
